@@ -1,0 +1,78 @@
+services:
+  web-container:
+    image: nginx:latest
+    container_name: web
+    networks:
+      port-scan-network:
+        ipv4_address: 192.168.1.100
+
+  telnet:
+    build: ./telnet_server/
+    container_name: telnet_server
+    networks:
+      port-scan-network:
+        ipv4_address: 192.168.1.101
+
+  ssh-container-creds:
+    image: lscr.io/linuxserver/openssh-server
+    container_name: ssh_creds
+    environment:
+      - USER_PASSWORD=superpassword
+      - USER_NAME=baptiste
+      - PASSWORD_ACCESS=true
+    networks:
+      port-scan-network:
+        ipv4_address: 192.168.1.102
+
+  ftp-anonymous:
+    build: ./ftp_server/
+    container_name: ftp_anonymous
+    environment:
+        - FTPD_BANNER=Anonymous FTP server
+    networks:
+      port-scan-network:
+        ipv4_address: 192.168.1.103
+
+  ftp-creds:
+    image: fauria/vsftpd
+    container_name: ftp_creds
+    environment:
+        - FTP_PASS=superpassword
+        - FTP_USER=baptiste
+    volumes:
+      - "./ftp_content/:/home/vsftpd"
+    networks:
+      port-scan-network:
+        ipv4_address: 192.168.1.104
+
+  mysql:
+    image: mysql
+    container_name: mysql
+    environment:
+      MYSQL_USER: baptiste
+      MYSQL_PASSWORD: superpassword
+      MYSQL_ROOT_PASSWORD: root
+    networks:
+      port-scan-network:
+        ipv4_address: 192.168.1.105
+
+  samba:
+    image: dockurr/samba
+    container_name: samba
+    environment:
+      NAME: "Data"
+      USER: "baptiste"
+      PASS: "superpassword"
+    volumes:
+      - ./smbserver:/storage
+    networks:
+      port-scan-network:
+        ipv4_address: 192.168.1.106
+
+networks:
+  port-scan-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 192.168.1.0/24
+
